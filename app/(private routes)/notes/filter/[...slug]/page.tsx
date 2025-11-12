@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TAGS } from "@/types/note";
+import { TAGS, type NoteTag } from "@/types/note";
 import NotesClient from "./Notes.client";
 import { fetchNotes } from "@/lib/api/clientApi";
 import {
@@ -15,17 +15,18 @@ const OG_IMAGE = "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg";
 export async function generateMetadata({
   params,
 }: {
-  params: { slug?: string[] };
+  params: Promise<{ slug?: string[] }>;
 }): Promise<Metadata> {
-  const { slug } = params;
-  const tag = slug?.[0] ?? "all";
-  const validTag = (TAGS as readonly string[]).includes(tag as any)
-    ? tag
-    : "all";
-
+  const { slug } = await params;
+  const tag = (slug?.[0] ?? "all") as (typeof TAGS)[number] | "all";
   const title =
-    validTag === "all" ? "Notes — All Notes" : `Notes — Filter: ${validTag}`;
-  const description = `Browse your notes filtered by tag: ${validTag}.`;
+    tag === "all"
+      ? "Notes — All Notes"
+      : `Notes — Filter: ${decodeURIComponent(tag)}`;
+  const description =
+    tag === "all"
+      ? "Browse all your notes."
+      : `Browse your notes filtered by tag: ${tag}.`;
 
   return {
     title,
@@ -33,7 +34,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: `${SITE_URL}/notes/filter/${validTag}`,
+      url: `${SITE_URL}/notes/filter/${tag}`,
       images: [{ url: OG_IMAGE }],
     },
   };
@@ -43,30 +44,31 @@ export default async function NotesPage({
   params,
   searchParams,
 }: {
-  params: { slug?: string[] };
-  searchParams: { page?: string; search?: string };
+  params: Promise<{ slug?: string[] }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }) {
-  const { slug } = params;
-  const { page: pageStr, search = "" } = searchParams;
+  const { slug } = await params;
+  const { page: pageStr, search = "" } = await searchParams;
 
-  const tag = slug?.[0] ?? "all";
-  const page = Number(pageStr ?? 1);
+  const tag = (slug?.[0] ?? "all") as NoteTag | "all";
+  const page = Number(pageStr ?? "1") || 1;
   const perPage = 12;
 
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery<NotesListResponse>({
-    queryKey: ["notes", { page, search, perPage, tag }],
+    queryKey: ["notes", { page, search, perPage, tag: tag ?? "all" }],
     queryFn: ({ signal }) =>
       fetchNotes(
         {
           page,
           perPage,
           search,
-          tag: tag !== "all" ? (tag as any) : undefined,
+          tag: tag !== "all" ? (tag as NoteTag) : undefined,
         },
         signal
       ),
+    staleTime: 30_000,
   });
 
   return (
@@ -75,7 +77,7 @@ export default async function NotesPage({
         initialPage={page}
         initialSearch={search}
         perPage={perPage}
-        currentTag={(tag as any) ?? "all"}
+        currentTag={tag}
       />
     </HydrationBoundary>
   );
