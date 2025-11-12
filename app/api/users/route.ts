@@ -1,18 +1,15 @@
 // app/api/users/route.ts
 export const dynamic = "force-dynamic";
 
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { isAxiosError } from "axios";
+import { NextRequest, NextResponse } from "next/server";
 import { api } from "@/lib/api/api";
+import { isAxiosError } from "axios";
 import { logErrorResponse } from "@/lib/utils/logErrorResponse";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies(); // без await
-    const res = await api.get("/users/me", {
-      headers: { Cookie: cookieStore.toString() },
-    });
+    const cookieHeader = request.headers.get("cookie") ?? "";
+    const res = await api.get("/users/me", { headers: { Cookie: cookieHeader } });
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
     if (isAxiosError(error)) {
@@ -23,19 +20,17 @@ export async function GET() {
       );
     }
     logErrorResponse({ message: (error as Error).message });
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
-    const cookieStore = cookies(); // без await
+    const cookieHeader = request.headers.get("cookie") ?? "";
     const body = await request.json();
+
     const res = await api.patch("/users/me", body, {
-      headers: { Cookie: cookieStore.toString() },
+      headers: { Cookie: cookieHeader },
     });
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
@@ -47,9 +42,6 @@ export async function PATCH(request: Request) {
       );
     }
     logErrorResponse({ message: (error as Error).message });
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
