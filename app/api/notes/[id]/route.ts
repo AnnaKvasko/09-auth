@@ -1,27 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { isAxiosError } from "axios";
-import { api } from "@/lib/api"; // або "@/lib/api/api"
-import { logErrorResponse } from "@/lib/utils/logErrorResponse";
-
+// app/api/notes/[id]/route.ts
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-type RouteCtx = { params: { id: string } };
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { isAxiosError } from "axios";
+import { api } from "@/lib/api/api";
+import { logErrorResponse } from "@/lib/utils/logErrorResponse";
 
-export async function GET(_req: NextRequest, { params }: RouteCtx) {
+// Тип відповідає тому, що зараз очікує твій Next типізатор: Promise<{ id: string }>
+type Ctx = { params: Promise<{ id: string }> };
+
+export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
-    const cookieHeader = cookies().toString();
-    const { id } = params;
-
+    const { id } = await ctx.params;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const { data, status } = await api.get(`/notes/${id}`, {
+    const cookieHeader = cookies().toString();
+
+    const res = await api.get(`/notes/${id}`, {
       headers: { Cookie: cookieHeader },
     });
 
-    return NextResponse.json(data, { status });
+    return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
@@ -38,18 +40,18 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: RouteCtx) {
+export async function DELETE(_req: NextRequest, ctx: Ctx) {
   try {
-    const cookieHeader = cookies().toString();
-    const { id } = params;
-
+    const { id } = await ctx.params;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const { data, status } = await api.delete(`/notes/${id}`, {
+    const cookieHeader = cookies().toString();
+
+    const res = await api.delete(`/notes/${id}`, {
       headers: { Cookie: cookieHeader },
     });
 
-    return NextResponse.json(data, { status });
+    return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
@@ -66,20 +68,19 @@ export async function DELETE(_req: NextRequest, { params }: RouteCtx) {
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: RouteCtx) {
+export async function PATCH(req: NextRequest, ctx: Ctx) {
   try {
-    const cookieHeader = cookies().toString();
-    const { id } = params;
-
+    const { id } = await ctx.params;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
+    const cookieHeader = cookies().toString();
     const body = await req.json();
 
-    const { data, status } = await api.patch(`/notes/${id}`, body, {
+    const res = await api.patch(`/notes/${id}`, body, {
       headers: { Cookie: cookieHeader },
     });
 
-    return NextResponse.json(data, { status });
+    return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);

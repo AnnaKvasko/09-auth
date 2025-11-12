@@ -1,19 +1,17 @@
+// app/api/users/route.ts
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { api } from "@/lib/api/api";
 import { cookies } from "next/headers";
-import { logErrorResponse } from "@/lib/utils/logErrorResponse";
 import { isAxiosError } from "axios";
+import { api } from "@/lib/api/api";
+import { logErrorResponse } from "@/lib/utils/logErrorResponse";
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-
+    const cookieStore = cookies(); // без await
     const res = await api.get("/users/me", {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: { Cookie: cookieStore.toString() },
     });
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
@@ -21,7 +19,7 @@ export async function GET() {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.status }
+        { status: error.response?.status ?? 500 }
       );
     }
     logErrorResponse({ message: (error as Error).message });
@@ -34,13 +32,10 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const cookieStore = await cookies();
+    const cookieStore = cookies(); // без await
     const body = await request.json();
-
     const res = await api.patch("/users/me", body, {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: { Cookie: cookieStore.toString() },
     });
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
@@ -48,7 +43,7 @@ export async function PATCH(request: Request) {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.status }
+        { status: error.response?.status ?? 500 }
       );
     }
     logErrorResponse({ message: (error as Error).message });
