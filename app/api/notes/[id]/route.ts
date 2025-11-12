@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { isAxiosError } from "axios";
-import { api } from "@/lib/api";
+import { api } from "@/lib/api"; // або "@/lib/api/api"
 import { logErrorResponse } from "@/lib/utils/logErrorResponse";
 
 export const runtime = "nodejs";
-
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -16,15 +15,13 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
     const cookieHeader = cookies().toString();
     const { id } = params;
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    }
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const res = await api.get(`/notes/${id}`, {
+    const { data, status } = await api.get(`/notes/${id}`, {
       headers: { Cookie: cookieHeader },
     });
 
-    return NextResponse.json(res.data, { status: res.status });
+    return NextResponse.json(data, { status });
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
@@ -46,15 +43,13 @@ export async function DELETE(_req: NextRequest, { params }: RouteCtx) {
     const cookieHeader = cookies().toString();
     const { id } = params;
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    }
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const res = await api.delete(`/notes/${id}`, {
+    const { data, status } = await api.delete(`/notes/${id}`, {
       headers: { Cookie: cookieHeader },
     });
 
-    return NextResponse.json(res.data, { status: res.status });
+    return NextResponse.json(data, { status });
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
@@ -76,17 +71,15 @@ export async function PATCH(req: NextRequest, { params }: RouteCtx) {
     const cookieHeader = cookies().toString();
     const { id } = params;
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    }
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
     const body = await req.json();
 
-    const res = await api.patch(`/notes/${id}`, body, {
+    const { data, status } = await api.patch(`/notes/${id}`, body, {
       headers: { Cookie: cookieHeader },
     });
 
-    return NextResponse.json(res.data, { status: res.status });
+    return NextResponse.json(data, { status });
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
