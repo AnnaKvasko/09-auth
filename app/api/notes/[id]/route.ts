@@ -1,22 +1,21 @@
-// app/api/notes/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { isAxiosError } from "axios";
+import { api } from "@/lib/api";
+import { logErrorResponse } from "@/lib/utils/logErrorResponse";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { NextRequest, NextResponse } from "next/server";
-import { api } from "@/lib/api/api";
-import { isAxiosError } from "axios";
-import { logErrorResponse } from "@/lib/utils/logErrorResponse";
+type Ctx = { params: Promise<{ id: string }> };
 
-type Ctx = { params: Promise<{ id: string }> }; // ✅
-
-export async function GET(_req: NextRequest, ctx: Ctx) {
+export async function GET(_req: NextRequest, { params }: Ctx) {
   try {
-    const { id } = await ctx.params; // ✅
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const cookieHeader = _req.headers.get("cookie") ?? "";
-
+    const cookieHeader = (await cookies()).toString();
     const res = await api.get(`/notes/${id}`, {
       headers: { Cookie: cookieHeader },
     });
@@ -37,13 +36,12 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   }
 }
 
-export async function DELETE(_req: NextRequest, ctx: Ctx) {
+export async function DELETE(_req: NextRequest, { params }: Ctx) {
   try {
-    const { id } = await ctx.params; // ✅
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const cookieHeader = _req.headers.get("cookie") ?? "";
-
+    const cookieHeader = (await cookies()).toString();
     const res = await api.delete(`/notes/${id}`, {
       headers: { Cookie: cookieHeader },
     });
@@ -64,14 +62,13 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
   }
 }
 
-export async function PATCH(req: NextRequest, ctx: Ctx) {
+export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
-    const { id } = await ctx.params; // ✅
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const cookieHeader = req.headers.get("cookie") ?? "";
     const body = await req.json();
-
+    const cookieHeader = (await cookies()).toString();
     const res = await api.patch(`/notes/${id}`, body, {
       headers: { Cookie: cookieHeader },
     });

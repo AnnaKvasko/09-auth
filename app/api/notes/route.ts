@@ -1,4 +1,3 @@
-// app/api/notes/route.ts
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -8,7 +7,7 @@ import { logErrorResponse } from "@/lib/utils/logErrorResponse";
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get("cookie") ?? ""; // ✅ так безпечно у Next 16
+    const cookieHeader = request.headers.get("cookie") ?? ""; 
 
     const search = request.nextUrl.searchParams.get("search") ?? "";
     const page = Number(request.nextUrl.searchParams.get("page") ?? 1);
@@ -44,7 +43,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get("cookie") ?? ""; // ✅ теж з request
+    const cookieHeader = request.headers.get("cookie") ?? ""; 
     const body = await request.json();
 
     const res = await api.post("/notes", body, {

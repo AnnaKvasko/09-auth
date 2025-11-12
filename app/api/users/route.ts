@@ -1,4 +1,3 @@
-// app/api/users/route.ts
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,7 +8,9 @@ import { logErrorResponse } from "@/lib/utils/logErrorResponse";
 export async function GET(request: NextRequest) {
   try {
     const cookieHeader = request.headers.get("cookie") ?? "";
-    const res = await api.get("/users/me", { headers: { Cookie: cookieHeader } });
+    const res = await api.get("/users/me", {
+      headers: { Cookie: cookieHeader },
+    });
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
     if (isAxiosError(error)) {
@@ -20,7 +21,10 @@ export async function GET(request: NextRequest) {
       );
     }
     logErrorResponse({ message: (error as Error).message });
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -42,6 +46,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
     logErrorResponse({ message: (error as Error).message });
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
