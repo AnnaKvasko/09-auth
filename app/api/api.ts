@@ -1,11 +1,6 @@
-import axios from "axios";
-
-const base = process.env.NEXT_PUBLIC_API_URL?.trim()
-  ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "")}/api`
-  : "https://notehub-api.goit.study/api";
+import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: base,
-
+  baseURL: 'https://notehub-api.goit.study',
   withCredentials: true,
 });

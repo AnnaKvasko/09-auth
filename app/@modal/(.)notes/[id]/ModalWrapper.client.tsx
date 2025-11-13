@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import css from "./Modal.module.css";
 
-export default function ModalWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+type ModalWrapperProps = {
+  children: ReactNode;
+};
+
+export default function ModalWrapper({ children }: ModalWrapperProps) {
   const router = useRouter();
 
   const handleClose = () => {
@@ -19,6 +19,7 @@ export default function ModalWrapper({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") handleClose();
     };
+
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);

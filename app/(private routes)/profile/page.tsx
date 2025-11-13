@@ -1,19 +1,34 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+
+import { getMe } from "@/lib/api/serverApi";
 import css from "./ProfilePage.module.css";
 
-export default function ProfilePage() {
+export const metadata: Metadata = {
+  title: "Profile — NoteHub",
+  description: "View and manage your NoteHub profile.",
+};
+
+export default async function ProfilePage() {
+  const user = await getMe();
+
+  const avatarSrc =
+    user.avatar || "https://ac.goit.global/img/avatar_default.png";
+
   return (
     <main className={css.mainContent}>
       <div className={css.profileCard}>
         <div className={css.header}>
           <h1 className={css.formTitle}>Сторінка профілю</h1>
-          <a href="/profile/edit" className={css.editProfileButton}>
+          <Link href="/profile/edit" className={css.editProfileButton}>
             Редагувати профіль
-          </a>
+          </Link>
         </div>
 
         <div className={css.avatarWrapper}>
-          <img
-            src="https://ac.goit.global/img/avatar_default.png"
+          <Image
+            src={avatarSrc}
             alt="Аватар користувача"
             width={120}
             height={120}
@@ -22,8 +37,8 @@ export default function ProfilePage() {
         </div>
 
         <div className={css.profileInfo}>
-          <p>Ім’я користувача: ваше_ім’я</p>
-          <p>Електронна пошта: your_email@example.com</p>
+          <p>Ім’я користувача: {user.username}</p>
+          <p>Електронна пошта: {user.email}</p>
         </div>
       </div>
     </main>

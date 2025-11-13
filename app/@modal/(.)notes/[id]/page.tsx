@@ -1,59 +1,34 @@
-"use client";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
+import { fetchNoteById } from "@/lib/api/serverApi";
+import getQueryClient from "@/lib/getQueryClient";
+import { logErrorResponse } from "@/lib/utils/logErrorResponse";
 
-import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { fetchNoteById } from "@/lib/api";
-import type { Note } from "@/types/note";
 import ModalWrapper from "./ModalWrapper.client";
 import NotePreviewClient from "./NotePreview.client";
-import css from "./Modal.module.css";
 
 type PageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export default function InterceptedNoteModal({ params }: PageProps) {
-  const { id } = params;
-  const router = useRouter();
+export default async function InterceptedNoteModal({ params }: PageProps) {
+  const { id } = await params;
 
-  const { data, isLoading, isError } = useQuery<Note>({
-    queryKey: ["note", id],
-    queryFn: ({ signal }) => fetchNoteById(id, signal),
-  });
+  const queryClient = getQueryClient();
 
-  if (isLoading) {
-    return (
-      <ModalWrapper>
-        <p className={css.loading}>Loading…</p>
-        <button
-          type="button"
-          className={css.closeBtn}
-          onClick={() => router.back()}
-        >
-          Close
-        </button>
-      </ModalWrapper>
-    );
-  }
-
-  if (isError || !data) {
-    return (
-      <ModalWrapper>
-        <p className={css.error}>Failed to load note.</p>
-        <button
-          type="button"
-          className={css.closeBtn}
-          onClick={() => router.back()}
-        >
-          Close
-        </button>
-      </ModalWrapper>
-    );
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ["note", id],
+      queryFn: ({ signal }) => fetchNoteById(id, signal),
+    });
+  } catch (error) {
+    logErrorResponse(error);
   }
 
   return (
-    <ModalWrapper>
-      <NotePreviewClient note={data} onClose={() => router.back()} />
-    </ModalWrapper>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ModalWrapper>
+        <NotePreviewClient id={id} />
+      </ModalWrapper>
+    </HydrationBoundary>
   );
 }

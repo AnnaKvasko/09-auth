@@ -10,30 +10,51 @@ export async function middleware(req: NextRequest) {
   const isPrivate = PRIVATE_PREFIXES.some((p) => pathname.startsWith(p));
   const isAuthPage = AUTH_PREFIXES.some((p) => pathname.startsWith(p));
 
-  // перевірка сесії
-  const sessionUrl = new URL("/api/auth/session", req.url);
-  const res = await fetch(sessionUrl, {
-    headers: { cookie: req.headers.get("cookie") ?? "" },
-    // важливо для edge: не кешуємо
-    cache: "no-store",
-  });
+  const accessToken = req.cookies.get("accessToken")?.value ?? null;
+  const refreshToken = req.cookies.get("refreshToken")?.value ?? null;
 
-  const text = await res.text();
-  const hasUser = res.status === 200 && text && text.trim() !== "";
+  let hasUser = Boolean(accessToken);
+  let setCookieHeader: string | null = null;
+
+  if (!accessToken && refreshToken) {
+    const refreshUrl = new URL("/api/auth/refresh", req.url);
+
+    const refreshRes = await fetch(refreshUrl.toString(), {
+      method: "POST",
+      headers: {
+        cookie: `refreshToken=${refreshToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (refreshRes.ok) {
+      hasUser = true;
+
+      setCookieHeader = refreshRes.headers.get("set-cookie");
+    } else {
+      hasUser = false;
+    }
+  }
+
+  let res: NextResponse;
 
   if (isPrivate && !hasUser) {
     const url = req.nextUrl.clone();
     url.pathname = "/sign-in";
-    return NextResponse.redirect(url);
-  }
-
-  if (isAuthPage && hasUser) {
+    res = NextResponse.redirect(url);
+  } else if (isAuthPage && hasUser) {
     const url = req.nextUrl.clone();
-    url.pathname = "/profile";
-    return NextResponse.redirect(url);
+    url.pathname = "/";
+    res = NextResponse.redirect(url);
+  } else {
+    res = NextResponse.next();
   }
 
-  return NextResponse.next();
+  if (setCookieHeader) {
+    res.headers.append("Set-Cookie", setCookieHeader);
+  }
+
+  return res;
 }
 
 export const config = {

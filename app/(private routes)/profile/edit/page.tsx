@@ -3,15 +3,21 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+
 import { getMe, updateMe } from "@/lib/api/clientApi";
+import { useAuthStore } from "@/lib/store/authStore";
+
 import css from "./EditProfilePage.module.css";
 
 export default function EditProfilePage() {
   const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [avatar, setAvatar] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+
+  const setUser = useAuthStore((state) => state.setUser);
 
   useEffect(() => {
     (async () => {
@@ -31,8 +37,12 @@ export default function EditProfilePage() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
     try {
-      await updateMe({ username });
+      const updatedUser = await updateMe({ username });
+
+      setUser(updatedUser);
+
       router.replace("/profile");
     } catch (e: any) {
       setError(e?.response?.data?.message ?? "Не вдалося оновити профіль");

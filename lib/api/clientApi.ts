@@ -1,4 +1,3 @@
-// lib/api/clientApi.ts
 import { api } from "./api";
 import type { Note, NoteTag } from "@/types/note";
 import type { User } from "@/types/user";
@@ -30,9 +29,6 @@ export async function logout(): Promise<void> {
   await api.post("/auth/logout", {});
 }
 
-/**
- * Узгоджено з серверною: повертаємо `User | null`.
- */
 export async function checkSession(): Promise<User | null> {
   const { data } = await api.get<User | null>("/auth/session");
   return data ?? null;
@@ -60,7 +56,7 @@ export async function fetchNoteById(
 export async function createNote(body: {
   title: string;
   content: string;
-  tag: NoteTag; // узгоджено з типами
+  tag: NoteTag;
 }): Promise<Note> {
   const { data } = await api.post<Note>("/notes", body);
   return data;

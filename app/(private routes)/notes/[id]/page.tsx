@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
-import { fetchNoteById } from "@/lib/api";
 import { isAxiosError } from "axios";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
+
+import { fetchNoteById } from "@/lib/api/serverApi";
+import getQueryClient from "@/lib/getQueryClient";
+
 import NoteDetailsClient from "./NoteDetails.client";
 
 const SITE_URL = "https://notehub.example.com";
@@ -32,12 +36,15 @@ export async function generateMetadata({
     };
   } catch (e) {
     if (isAxiosError(e) && e.response?.status === 404) {
+      const title = "Note Not Found — NoteHub";
+      const description = "This note could not be found.";
+
       return {
-        title: "Note Not Found — NoteHub",
-        description: "This note could not be found.",
+        title,
+        description,
         openGraph: {
-          title: "Note Not Found — NoteHub",
-          description: "This note could not be found.",
+          title,
+          description,
           url: `${SITE_URL}/notes/${id}`,
           images: [{ url: OG_IMAGE }],
         },
@@ -49,5 +56,17 @@ export async function generateMetadata({
 
 export default async function NotePage({ params }: { params: { id: string } }) {
   const { id } = params;
-  return <NoteDetailsClient id={id} />;
+
+  const queryClient = getQueryClient();
+
+  await queryClient.prefetchQuery({
+    queryKey: ["note", id],
+    queryFn: ({ signal }) => fetchNoteById(id, signal),
+  });
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <NoteDetailsClient id={id} />
+    </HydrationBoundary>
+  );
 }
