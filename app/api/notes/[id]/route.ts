@@ -95,11 +95,10 @@ import { api } from "../../api";
 import { logErrorResponse } from "../../_utils/utils";
 import { isAxiosError } from "axios";
 
-type RouteContext = {
-  params: Promise<{ id: string }>;
-};
-
-export async function GET(_req: NextRequest, { params }: RouteContext) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const cookieStore = cookies();
     const { id } = await params;
@@ -116,7 +115,10 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       logErrorResponse(error.response?.data);
 
       return NextResponse.json(
-        { error: error.message, response: error.response?.data },
+        {
+          error: error.message,
+          response: error.response?.data,
+        },
         { status: error.response?.status ?? 500 }
       );
     }
@@ -130,7 +132,10 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const cookieStore = cookies();
     const { id } = await params;
@@ -147,7 +152,10 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       logErrorResponse(error.response?.data);
 
       return NextResponse.json(
-        { error: error.message, response: error.response?.data },
+        {
+          error: error.message,
+          response: error.response?.data,
+        },
         { status: error.response?.status ?? 500 }
       );
     }
@@ -161,7 +169,10 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: RouteContext) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const cookieStore = cookies();
     const { id } = await params;
@@ -179,7 +190,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       logErrorResponse(error.response?.data);
 
       return NextResponse.json(
-        { error: error.message, response: error.response?.data },
+        {
+          error: error.message,
+          response: error.response?.data,
+        },
         { status: error.response?.status ?? 500 }
       );
     }
