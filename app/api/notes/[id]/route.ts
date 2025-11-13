@@ -88,17 +88,18 @@
 //     );
 //   }
 // }
-import { NextResponse, type NextRequest } from "next/server";
-import { api } from "../../api";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { api } from "../../api";
 import { logErrorResponse } from "../../_utils/utils";
 import { isAxiosError } from "axios";
 
-type Props = {
+type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(_req: NextRequest, { params }: Props) {
+export async function GET(_req: NextRequest, { params }: RouteContext) {
   try {
     const cookieStore = cookies();
     const { id } = await params;
@@ -113,6 +114,7 @@ export async function GET(_req: NextRequest, { params }: Props) {
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
+
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
         { status: error.response?.status ?? 500 }
@@ -120,6 +122,7 @@ export async function GET(_req: NextRequest, { params }: Props) {
     }
 
     logErrorResponse({ message: (error as Error).message });
+
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
@@ -127,7 +130,7 @@ export async function GET(_req: NextRequest, { params }: Props) {
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: Props) {
+export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   try {
     const cookieStore = cookies();
     const { id } = await params;
@@ -142,6 +145,7 @@ export async function DELETE(_req: NextRequest, { params }: Props) {
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
+
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
         { status: error.response?.status ?? 500 }
@@ -149,6 +153,7 @@ export async function DELETE(_req: NextRequest, { params }: Props) {
     }
 
     logErrorResponse({ message: (error as Error).message });
+
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
@@ -156,7 +161,7 @@ export async function DELETE(_req: NextRequest, { params }: Props) {
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: Props) {
+export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
     const cookieStore = cookies();
     const { id } = await params;
@@ -172,6 +177,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
+
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
         { status: error.response?.status ?? 500 }
@@ -179,6 +185,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
     }
 
     logErrorResponse({ message: (error as Error).message });
+
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
