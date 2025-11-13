@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { checkSession } from "@/lib/api/clientApi";
+
 import { useAuthStore } from "@/lib/store/authStore";
 
 const PRIVATE_PREFIXES = ["/notes", "/profile"];

@@ -7,7 +7,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import { getSession } from "@/lib/api/clientApi";
+import { checkSession as getSession } from "@/lib/api/clientApi";
 import type { User } from "@/types/user";
 
 type AuthContextType = {
