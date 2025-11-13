@@ -7,7 +7,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import { checkSession as getSession } from "@/lib/api/clientApi";
+import { checkSession } from "@/lib/api/clientApi";
 import type { User } from "@/types/user";
 
 type AuthContextType = {
@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getSession()
+    checkSession()
       .then((u) => setUser(u ?? null))
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
