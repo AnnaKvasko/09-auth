@@ -29,11 +29,13 @@ export async function logout(): Promise<void> {
   await api.post("/auth/logout", {});
 }
 
+// 👇 важливе виправлення шляху
 export async function checkSession(): Promise<User | null> {
-  const { data } = await api.get<User | null>("/api/auth/session");
+  const { data } = await api.get<User | null>("/auth/session");
   return data ?? null;
 }
 
+// якщо хочеш, alias можна залишити
 export const getSession = checkSession;
 
 export async function fetchNotes(
