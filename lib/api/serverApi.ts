@@ -33,7 +33,6 @@ export async function sGetMe(): Promise<User> {
   return data;
 }
 
-// 👇 тут важливе виправлення шляху
 export async function sCheckSession(): Promise<AxiosResponse<User | null>> {
   const api = withCookie();
   const response = await api.get<User | null>("/auth/session");

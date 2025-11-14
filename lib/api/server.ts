@@ -1,15 +1,17 @@
 import axios from "axios";
 import { cookies } from "next/headers";
 
-const baseURL = `${process.env.NEXT_PUBLIC_API_URL}/api`;
-
 export function withCookie() {
-  return axios.create({
-    baseURL,
+  const cookieStore = cookies();
+
+  const api = axios.create({
+    baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api`,
     withCredentials: true,
     headers: {
-      Cookie: cookies().toString(),
+      Cookie: cookieStore.toString(),
       "Content-Type": "application/json",
     },
   });
+
+  return api;
 }
