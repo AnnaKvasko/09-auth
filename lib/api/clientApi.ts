@@ -30,7 +30,7 @@ export async function logout(): Promise<void> {
 }
 
 export async function checkSession(): Promise<User | null> {
-  const { data } = await api.get<User | null>("/auth/session");
+  const { data } = await api.get<User | null>("/api/auth/session");
   return data ?? null;
 }
 
