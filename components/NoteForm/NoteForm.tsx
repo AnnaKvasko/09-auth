@@ -4,10 +4,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { useNoteStore } from "@/lib/store/noteStore";
 import { createNoteAction } from "@/lib/actions";
 import type { NoteTag } from "@/types/note";
 import { TAGS } from "@/types/note";
+
 import css from "./NoteForm.module.css";
 
 type CreateResult = { ok: true };
@@ -31,24 +33,35 @@ export default function NoteForm() {
   const [tag, setTag] = useState<NoteTag>("Todo");
   const [hydrated, setHydrated] = useState(false);
 
+  // Типізуємо persist, щоб TS не підкреслював
+  const store = useNoteStore as typeof useNoteStore & {
+    persist: {
+      onFinishHydration: (cb: () => void) => void | (() => void);
+      hasHydrated: () => boolean;
+    };
+  };
+
   useEffect(() => {
-    const unsub = useNoteStore.persist.onFinishHydration(() => {
-      const restored = useNoteStore.getState().draft;
+    const unsub = store.persist.onFinishHydration(() => {
+      const restored = store.getState().draft;
       setTitle(restored.title);
       setContent(restored.content);
       setTag(restored.tag);
       setHydrated(true);
     });
 
-    if (useNoteStore.persist.hasHydrated()) {
-      const restored = useNoteStore.getState().draft;
+    if (store.persist.hasHydrated()) {
+      const restored = store.getState().draft;
       setTitle(restored.title);
       setContent(restored.content);
       setTag(restored.tag);
       setHydrated(true);
     }
 
-    return () => unsub?.();
+    return () => {
+      if (typeof unsub === "function") unsub();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -62,10 +75,13 @@ export default function NoteForm() {
       fd.append("title", title);
       fd.append("content", content);
       fd.append("tag", tag);
+
       const res = await createNoteAction(fd);
+
       if (!isCreateResult(res)) {
         throw new Error("Failed to create note");
       }
+
       return res;
     },
     onSuccess: async () => {
