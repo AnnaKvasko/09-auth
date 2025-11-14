@@ -29,17 +29,17 @@ export default function NotePreviewClient({ id }: NotePreviewProps) {
   const handleClose = () => router.back();
 
   return (
-    <ModalWrapper>
+    <ModalWrapper onClose={handleClose}>
       {isLoading && <p>Loading...</p>}
       {isError && <p>Failed to load note. Please try again.</p>}
 
-      {note && (
+      {note && !isLoading && !isError && (
         <>
           <h2 className={css.title}>{note.title}</h2>
           <p className={css.tag}>{note.tag}</p>
           <p className={css.content}>{note.content}</p>
 
-          <button className={css.closeBtn} onClick={handleClose}>
+          <button type="button" className={css.closeBtn} onClick={handleClose}>
             Close
           </button>
         </>

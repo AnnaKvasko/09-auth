@@ -34,6 +34,8 @@ export async function checkSession(): Promise<User | null> {
   return data ?? null;
 }
 
+export const getSession = checkSession;
+
 export async function fetchNotes(
   params: { page: number; perPage: number; search?: string; tag?: NoteTag },
   signal?: AbortSignal
@@ -76,5 +78,3 @@ export async function updateMe(payload: Partial<User>): Promise<User> {
   const { data } = await api.patch<User>("/users/me", payload);
   return data;
 }
-
-export const getSession = checkSession;

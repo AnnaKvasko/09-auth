@@ -1,35 +1,29 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import css from "./Modal.module.css";
 
 type ModalWrapperProps = {
-  children: ReactNode;
+  children: React.ReactNode;
+  onClose: () => void;
 };
 
-export default function ModalWrapper({ children }: ModalWrapperProps) {
-  const router = useRouter();
-
-  const handleClose = () => {
-    router.back();
-  };
-
+export default function ModalWrapper({ children, onClose }: ModalWrapperProps) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
+      if (e.key === "Escape") onClose();
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [onClose]);
 
   return (
     <div
       className={css.backdrop}
       role="dialog"
       aria-modal="true"
-      onClick={handleClose}
+      onClick={onClose}
     >
       <div className={css.modal} onClick={(e) => e.stopPropagation()}>
         {children}
