@@ -76,3 +76,5 @@ export async function updateMe(payload: Partial<User>): Promise<User> {
   const { data } = await api.patch<User>("/users/me", payload);
   return data;
 }
+
+export const getSession = checkSession;
