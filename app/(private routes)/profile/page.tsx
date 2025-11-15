@@ -45,11 +45,12 @@
 //   );
 // }
 // app/(private routes)/profile/page.tsx
+// app/(private routes)/profile/page.tsx
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-import { getMe } from "@/lib/api/serverApi";
+import { safeGetMe } from "@/lib/api/serverApi";
 import css from "./ProfilePage.module.css";
 
 export const metadata = {
@@ -58,12 +59,10 @@ export const metadata = {
 };
 
 export default async function ProfilePage() {
-  let user;
+  const user = await safeGetMe();
 
-  try {
-    user = await getMe();
-  } catch {
-    // якщо бекенд повернув 401 / помилку — відправляємо на логін
+  if (!user) {
+    // якщо бекенд повернув 401 → safeGetMe дає null → відправляємо на логін
     redirect("/sign-in");
   }
 
