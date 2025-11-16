@@ -5,12 +5,12 @@ import css from "./Modal.module.css";
 
 type ModalWrapperProps = {
   children: React.ReactNode;
-  onClose?: () => void; // 🔹 зробили необов'язковим
+  onClose?: () => void;
 };
 
 export default function ModalWrapper({ children, onClose }: ModalWrapperProps) {
   useEffect(() => {
-    if (!onClose) return; // якщо не передали — нічого не слухаємо
+    if (!onClose) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
