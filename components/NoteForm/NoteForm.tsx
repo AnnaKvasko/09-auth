@@ -1,194 +1,114 @@
-"use client";
-
-import { useEffect, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { useNoteStore } from "@/lib/store/noteStore";
-import { createNoteAction } from "@/lib/actions";
-import type { NoteTag } from "@/types/note";
-import { TAGS } from "@/types/note";
-
+import { createNote } from "@/lib/api/clientApi";
 import css from "./NoteForm.module.css";
+import { useRouter } from "next/navigation";
+import { useNoteDraftStore } from "@/lib/store/noteStore";
 
-type CreateResult = { ok: true };
-function isCreateResult(x: unknown): x is CreateResult {
-  return !!x && typeof x === "object" && "ok" in x;
-}
-
-type CreatePayload = {
+type FormValues = {
   title: string;
   content: string;
-  tag: NoteTag;
+  tag: string;
 };
 
 export default function NoteForm() {
-  const router = useRouter();
-  const qc = useQueryClient();
-  const { setDraft, clearDraft } = useNoteStore();
+  const queryClient = useQueryClient();
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [tag, setTag] = useState<NoteTag>("Todo");
-  const [hydrated, setHydrated] = useState(false);
+  const { draft, setDraft, clearDraft } = useNoteDraftStore();
 
-  // Типізуємо persist, щоб TS не підкреслював
-  const store = useNoteStore as typeof useNoteStore & {
-    persist: {
-      onFinishHydration: (cb: () => void) => void | (() => void);
-      hasHydrated: () => boolean;
-    };
+  const handleChange = (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    setDraft({
+      ...draft,
+      [event.target.name]: event.target.value,
+    });
   };
 
-  useEffect(() => {
-    const unsub = store.persist.onFinishHydration(() => {
-      const restored = store.getState().draft;
-      setTitle(restored.title);
-      setContent(restored.content);
-      setTag(restored.tag);
-      setHydrated(true);
-    });
+  const router = useRouter();
 
-    if (store.persist.hasHydrated()) {
-      const restored = store.getState().draft;
-      setTitle(restored.title);
-      setContent(restored.content);
-      setTag(restored.tag);
-      setHydrated(true);
-    }
+  const { mutate } = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
 
-    return () => {
-      if (typeof unsub === "function") unsub();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    setDraft({ title, content, tag });
-  }, [title, content, tag, hydrated, setDraft]);
-
-  const { mutate, isPending, isError, error } = useMutation({
-    mutationFn: async ({ title, content, tag }: CreatePayload) => {
-      const fd = new FormData();
-      fd.append("title", title);
-      fd.append("content", content);
-      fd.append("tag", tag);
-
-      const res = await createNoteAction(fd);
-
-      if (!isCreateResult(res)) {
-        throw new Error("Failed to create note");
-      }
-
-      return res;
-    },
-    onSuccess: async () => {
       clearDraft();
-      await qc.invalidateQueries({
-        predicate: (q) =>
-          Array.isArray(q.queryKey) && q.queryKey[0] === "notes",
-      });
-      router.back();
+      router.push("/notes/filter/all");
     },
   });
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (title.trim().length < 3 || content.trim().length === 0) return;
-    mutate({ title: title.trim(), content: content.trim(), tag });
-  }
+  const handleSubmit = (formData: FormData) => {
+    const values = Object.fromEntries(formData) as FormValues;
+    console.log(values);
 
-  if (!hydrated) return null;
+    mutate(values);
+  };
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className={css.form}
-      autoComplete="off"
-      suppressHydrationWarning
-    >
+    <form className={css.form} action={handleSubmit}>
       <div className={css.formGroup}>
-        <label htmlFor="title">Title</label>
-        <input
-          id="title"
-          name="title"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.currentTarget.value)}
-          required
-          minLength={3}
-          maxLength={50}
-          className={css.input}
-          disabled={isPending}
-        />
+        <label>
+          Title
+          <input
+            id="title"
+            name="title"
+            type="text"
+            className={css.input}
+            defaultValue={draft?.title}
+            onChange={handleChange}
+          />
+        </label>
       </div>
 
       <div className={css.formGroup}>
-        <label htmlFor="content">Content</label>
-        <textarea
-          id="content"
-          name="content"
-          value={content}
-          onChange={(e) => setContent(e.currentTarget.value)}
-          rows={6}
-          maxLength={500}
-          required
-          className={css.textarea}
-          disabled={isPending}
-        />
+        <label>
+          Content
+          <textarea
+            id="content"
+            name="content"
+            rows={8}
+            className={css.textarea}
+            defaultValue={draft?.content}
+            onChange={handleChange}
+          />
+        </label>
       </div>
 
       <div className={css.formGroup}>
-        <label htmlFor="tag">Tag</label>
-        <select
-          id="tag"
-          name="tag"
-          value={tag}
-          onChange={(e) => setTag(e.currentTarget.value as NoteTag)}
-          className={css.select}
-          disabled={isPending}
-        >
-          {TAGS.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+        <label>
+          Tag
+          <select
+            id="tag"
+            name="tag"
+            className={css.select}
+            defaultValue={draft?.tag}
+            onChange={handleChange}
+          >
+            <option value="">Choose tag..</option>
+            <option value="Todo">Todo</option>
+            <option value="Work">Work</option>
+            <option value="Personal">Personal</option>
+            <option value="Meeting">Meeting</option>
+            <option value="Shopping">Shopping</option>
+          </select>
+        </label>
       </div>
 
       <div className={css.actions}>
         <button
           type="button"
           className={css.cancelButton}
-          onClick={() => router.back()}
-          disabled={isPending}
+          onClick={() => {
+            router.push("/notes/filter/all");
+          }}
         >
           Cancel
         </button>
-
-        <button
-          type="submit"
-          className={css.submitButton}
-          disabled={isPending}
-          aria-busy={isPending}
-        >
-          {isPending ? "Saving…" : "Save"}
+        <button type="submit" className={css.submitButton}>
+          Create note +
         </button>
       </div>
-
-      {isError && (
-        <p role="alert" className={css.error}>
-          {(error as Error)?.message ?? "Something went wrong"}
-        </p>
-      )}
-
-      <p className={css.hint}>
-        <Link href="/notes" className={css.link}>
-          Back to notes
-        </Link>
-      </p>
     </form>
   );
 }

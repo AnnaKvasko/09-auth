@@ -7,14 +7,14 @@ import { logout } from "@/lib/api/clientApi";
 import css from "./AuthNavigation.module.css";
 
 export default function AuthNavigation() {
-  const { isAuthenticated, user, clearAuth } = useAuthStore(); 
+  const { isAuthenticated, user, clearAuth } = useAuthStore();
   const router = useRouter();
 
   const onLogout = async () => {
     try {
       await logout();
     } finally {
-      clearAuth();                
+      clearAuth();
       router.replace("/sign-in");
     }
   };

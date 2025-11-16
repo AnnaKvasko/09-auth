@@ -1,6 +1,6 @@
 "use server";
 
-import { createNote } from "@/lib/api";
+import { createNote } from "@/lib/api/clientApi";
 import { TAGS, type NoteTag } from "@/types/note";
 
 function toNoteTag(v: unknown): NoteTag {

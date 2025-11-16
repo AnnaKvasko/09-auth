@@ -1,45 +1,34 @@
-"use client";
-
-import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { NoteTag } from "@/types/note";
+import { create } from "zustand";
 
-export type Draft = {
+interface MetaDataType {
   title: string;
   content: string;
-  tag: NoteTag;
+  tag: string;
+}
+
+type NoteDraftStore = {
+  draft: MetaDataType;
+  setDraft: (note: MetaDataType) => void;
+  clearDraft: () => void;
 };
 
-export const initialDraft: Draft = {
+const initialDraft: MetaDataType = {
   title: "",
   content: "",
   tag: "Todo",
 };
 
-
-type NoteState = {
-  draft: Draft;
-  setDraft: (partial: Partial<Draft>) => void;
-  clearDraft: () => void;
-  hasHydrated: boolean;
-  setHasHydrated: (v: boolean) => void;
-};
-
-export const useNoteStore = create<NoteState>()(
+export const useNoteDraftStore = create<NoteDraftStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       draft: initialDraft,
-      setDraft: (partial) => set({ draft: { ...get().draft, ...partial } }),
-      clearDraft: () => set({ draft: initialDraft }),
-      hasHydrated: false,
-      setHasHydrated: (v) => set({ hasHydrated: v }),
+      setDraft: (note) => set(() => ({ draft: note })),
+      clearDraft: () => set(() => ({ draft: initialDraft })),
     }),
     {
-      name: "notehub-draft",
+      name: "note-draft",
       partialize: (state) => ({ draft: state.draft }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
-      },
     }
   )
 );

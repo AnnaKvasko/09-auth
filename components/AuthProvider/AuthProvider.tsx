@@ -1,61 +1,39 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { checkSession } from "@/lib/api/clientApi";
-
+import { useEffect, type ReactNode } from "react";
 import { useAuthStore } from "@/lib/store/authStore";
+import { getMe, checkSession } from "@/lib/api/clientApi";
 
-const PRIVATE_PREFIXES = ["/notes", "/profile"];
-const AUTH_PREFIXES = ["/sign-in", "/sign-up"];
+type Props = {
+  children: ReactNode;
+};
 
-export default function AuthProvider({ children }: { children: ReactNode }) {
-  const { setUser, clearAuth } = useAuthStore();
-  const [loading, setLoading] = useState(true);
-  const pathname = usePathname();
-  const router = useRouter();
+const AuthProvider = ({ children }: Props) => {
+  const setUser = useAuthStore((state) => state.setUser);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
+    const fetchUser = async () => {
       try {
-        const user = await checkSession();
-        if (cancelled) return;
+        const isAuthenticated = await checkSession();
 
-        if (user) {
-          setUser(user);
-          if (AUTH_PREFIXES.some((p) => pathname?.startsWith(p))) {
-            router.replace("/profile");
+        if (isAuthenticated) {
+          const user = await getMe();
+          if (user) {
+            setUser(user);
           }
         } else {
           clearAuth();
-          if (PRIVATE_PREFIXES.some((p) => pathname?.startsWith(p))) {
-            router.replace("/sign-in");
-          }
         }
-      } catch {
-        if (cancelled) return;
+      } catch (error) {
         clearAuth();
-        if (PRIVATE_PREFIXES.some((p) => pathname?.startsWith(p))) {
-          router.replace("/sign-in");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
       }
-    })();
-
-    return () => {
-      cancelled = true;
     };
-  }, [pathname, router, setUser, clearAuth]);
 
-  if (loading) {
-    return (
-      <div style={{ padding: 24, textAlign: "center" }}>
-        <span>Loading…</span>
-      </div>
-    );
-  }
+    fetchUser();
+  }, [setUser, clearAuth]);
 
   return <>{children}</>;
-}
+};
+
+export default AuthProvider;

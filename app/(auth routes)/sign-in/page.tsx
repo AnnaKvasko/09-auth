@@ -1,37 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { login } from "@/lib/api/clientApi";
-import { useAuthStore } from "@/lib/store/authStore";
+import { registerRequest } from "@/lib/api/clientApi";
 import css from "./SignIn.module.css";
+import { login } from "@/lib/api/clientApi";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useAuthStore } from "@/lib/store/authStore";
 
-export default function SignInPage() {
+const Login = () => {
+  const setUser = useAuthStore((state) => state.setUser);
+
   const router = useRouter();
-  const { setUser } = useAuthStore();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    const fd = new FormData(e.currentTarget);
-    const email = String(fd.get("email") || "");
-    const password = String(fd.get("password") || "");
+  const handleSubmit = async (formData: FormData) => {
     try {
-      const user = await login({ email, password });
-      setUser(user);
-      router.replace("/profile");
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? "Помилка входу");
+      const formValue = Object.fromEntries(formData) as registerRequest;
+      const res = await login(formValue);
+      if (res) {
+        setUser(res);
+        router.push("/profile");
+      }
+    } catch {
+      setError("Oops... some error");
     }
-  }
+  };
 
   return (
     <main className={css.mainContent}>
-      <form className={css.form} onSubmit={onSubmit}>
-        <h1 className={css.formTitle}>Увійти</h1>
+      <form className={css.form} action={handleSubmit}>
+        <h1 className={css.formTitle}>Sign-in</h1>
+
         <div className={css.formGroup}>
-          <label htmlFor="email">Електронна пошта</label>
+          <label htmlFor="email">Email</label>
           <input
             id="email"
             type="email"
@@ -40,8 +41,9 @@ export default function SignInPage() {
             required
           />
         </div>
+
         <div className={css.formGroup}>
-          <label htmlFor="password">Пароль</label>
+          <label htmlFor="password">Password</label>
           <input
             id="password"
             type="password"
@@ -50,13 +52,16 @@ export default function SignInPage() {
             required
           />
         </div>
+
         <div className={css.actions}>
           <button type="submit" className={css.submitButton}>
-            Увійти
+            Log in
           </button>
         </div>
-        {error && <p className={css.error}>{error}</p>}
+
+        <p className={css.error}>{error}</p>
       </form>
     </main>
   );
-}
+};
+export default Login;

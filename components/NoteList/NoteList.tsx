@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import type { Note } from "@/types/note";
 import type { NotesListResponse } from "@/lib/types";
-import { deleteNote } from "@/lib/api";
+import { deleteNote } from "@/lib/api/clientApi";
 import css from "./NoteList.module.css";
 
 export interface NoteListProps {
@@ -30,7 +30,6 @@ export default function NoteList({
   const listKey = ["notes", { page, search, perPage, tag: tagKey }] as const;
 
   const { mutate } = useMutation<Note, Error, string, Ctx>({
-    // ⬇️ передаємо рядок, НЕ об'єкт
     mutationFn: (id) => deleteNote(id),
     onMutate: async (id) => {
       setDeletingId(id);

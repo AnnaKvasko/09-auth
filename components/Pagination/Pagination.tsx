@@ -1,53 +1,75 @@
 "use client";
 
-import ReactPaginate from "react-paginate";
+import type { Dispatch, SetStateAction } from "react";
 import css from "./Pagination.module.css";
 
-export interface PaginationProps {
-  pageCount: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-  className?: string;
+interface PaginationProps {
+  totalPages: number;
+  page: number;
+  setPage: Dispatch<SetStateAction<number>>;
 }
 
 export default function Pagination({
-  pageCount,
-  currentPage,
-  onPageChange,
-  className,
+  totalPages,
+  page,
+  setPage,
 }: PaginationProps) {
-  
-  const totalPages = Math.max(1, pageCount);
-  const activePage = Math.max(0, currentPage - 1);
+  if (totalPages <= 1) return null;
+
+  const handleChangePage = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages || newPage === page) return;
+    setPage(newPage);
+  };
+
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  const prevDisabled = page === 1;
+  const nextDisabled = page === totalPages;
 
   return (
-    <nav
-      className={className}
-      aria-label="Pagination navigation"
-      role="navigation"
-    >
-      <ReactPaginate
-        containerClassName={css.pagination}
-        pageClassName={css.page}
-        pageLinkClassName={css.pageLink}
-        activeClassName={css.active}
-        previousClassName={css.page}
-        previousLinkClassName={css.pageLink}
-        nextClassName={css.page}
-        nextLinkClassName={css.pageLink}
-        breakClassName={css.page}
-        breakLinkClassName={css.pageLink}
-        disabledClassName={css.disabled}
-        previousLabel="‹ Prev"
-        nextLabel="Next ›"
-        breakLabel="…"
-        pageCount={totalPages}
-        pageRangeDisplayed={3}
-        marginPagesDisplayed={1}
-        forcePage={activePage}
-        onPageChange={(event) => onPageChange(event.selected + 1)}
-        renderOnZeroPageCount={null}
-      />
-    </nav>
+    <ul className={css.pagination}>
+     
+      <li
+        className={`${css.page} ${prevDisabled ? css.disabled : ""}`}
+        onClick={() => !prevDisabled && handleChangePage(page - 1)}
+      >
+        <button
+          type="button"
+          className={css.pageLink}
+          disabled={prevDisabled}
+        >
+          Prev
+        </button>
+      </li>
+
+      
+      {pages.map((p) => {
+        const isActive = p === page;
+        return (
+          <li
+            key={p}
+            className={`${css.page} ${isActive ? css.active : ""}`}
+            onClick={() => handleChangePage(p)}
+          >
+            <button type="button" className={css.pageLink}>
+              {p}
+            </button>
+          </li>
+        );
+      })}
+
+      <li
+        className={`${css.page} ${nextDisabled ? css.disabled : ""}`}
+        onClick={() => !nextDisabled && handleChangePage(page + 1)}
+      >
+        <button
+          type="button"
+          className={css.pageLink}
+          disabled={nextDisabled}
+        >
+          Next
+        </button>
+      </li>
+    </ul>
   );
 }

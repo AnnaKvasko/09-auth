@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchNoteById } from "@/lib/api/clientApi";
+import { getSingleNote } from "@/lib/api/clientApi";
 import type { Note } from "@/types/note";
 
 import ModalWrapper from "./ModalWrapper.client";
@@ -22,7 +22,7 @@ export default function NotePreviewClient({ id }: NotePreviewProps) {
     isError,
   } = useQuery<Note>({
     queryKey: ["note", id],
-    queryFn: () => fetchNoteById(id),
+    queryFn: () => getSingleNote(id),
     enabled: Boolean(id),
   });
 

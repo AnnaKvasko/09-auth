@@ -1,37 +1,41 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { register } from "@/lib/api/clientApi";
-import { useAuthStore } from "@/lib/store/authStore";
 import css from "./SignUp.module.css";
+import { register } from "@/lib/api/clientApi";
+import { registerRequest } from "@/lib/api/clientApi";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/store/authStore";
+import { useState } from "react";
+import { AxiosError } from "axios";
 
-export default function SignUpPage() {
-  const router = useRouter();
-  const { setUser } = useAuthStore();
+const Register = () => {
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const router = useRouter();
+
+  const setUser = useAuthStore((state) => state.setUser);
+
+  const handleSubmit = async (formData: FormData) => {
     setError(null);
-    const fd = new FormData(e.currentTarget);
-    const email = String(fd.get("email") || "");
-    const password = String(fd.get("password") || "");
+    const formValues = Object.fromEntries(formData) as registerRequest;
     try {
-      const user = await register({ email, password });
-      setUser(user);
-      router.replace("/profile");
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? "Помилка реєстрації");
+      const res = await register(formValues);
+      if (res) {
+        setUser(res);
+        router.push("/profile");
+      }
+    } catch (e) {
+      const err = e as AxiosError<{ message?: string }>;
+      setError(err.response?.data?.message ?? "Something went wrong");
     }
-  }
+  };
 
   return (
     <main className={css.mainContent}>
-      <h1 className={css.formTitle}>Зареєструватися</h1>
-      <form className={css.form} onSubmit={onSubmit}>
+      <h1 className={css.formTitle}>Sign-up</h1>
+      <form className={css.form} action={handleSubmit}>
         <div className={css.formGroup}>
-          <label htmlFor="email">Електронна пошта</label>
+          <label htmlFor="email">Email</label>
           <input
             id="email"
             type="email"
@@ -40,8 +44,9 @@ export default function SignUpPage() {
             required
           />
         </div>
+
         <div className={css.formGroup}>
-          <label htmlFor="password">Пароль</label>
+          <label htmlFor="password">Password</label>
           <input
             id="password"
             type="password"
@@ -50,13 +55,16 @@ export default function SignUpPage() {
             required
           />
         </div>
+
         <div className={css.actions}>
           <button type="submit" className={css.submitButton}>
-            Зареєструватися
+            Register
           </button>
         </div>
+
         {error && <p className={css.error}>{error}</p>}
       </form>
     </main>
   );
-}
+};
+export default Register;

@@ -1,84 +1,67 @@
-import type { Metadata } from "next";
-import { TAGS, type NoteTag } from "@/types/note";
+import { fetchServerNotes } from "@/lib/api/serverApi";
+
 import NotesClient from "./Notes.client";
-import { fetchNotes } from "@/lib/api/serverApi";
 import {
   HydrationBoundary,
   QueryClient,
   dehydrate,
 } from "@tanstack/react-query";
-import type { NotesListResponse } from "@/lib/types";
+import { Metadata } from "next";
 
-const SITE_URL = "https://notehub.example.com";
-const OG_IMAGE = "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg";
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug?: string[] }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const tag = (slug?.[0] ?? "all") as (typeof TAGS)[number] | "all";
-  const title =
-    tag === "all"
-      ? "Notes — All Notes"
-      : `Notes — Filter: ${decodeURIComponent(tag)}`;
-  const description =
-    tag === "all"
-      ? "Browse all your notes."
-      : `Browse your notes filtered by tag: ${tag}.`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      url: `${SITE_URL}/notes/filter/${tag}`,
-      images: [{ url: OG_IMAGE }],
-    },
-  };
+interface GenerateMetaDataProps {
+  params: Promise<{ slug: string[] }>;
 }
 
-export default async function NotesPage({
+export const generateMetadata = async ({
   params,
-  searchParams,
-}: {
-  params: Promise<{ slug?: string[] }>;
-  searchParams: Promise<{ page?: string; search?: string }>;
-}) {
+}: GenerateMetaDataProps): Promise<Metadata> => {
   const { slug } = await params;
-  const { page: pageStr, search = "" } = await searchParams;
 
-  const tag = (slug?.[0] ?? "all") as NoteTag | "all";
-  const page = Number(pageStr ?? "1") || 1;
-  const perPage = 12;
+  const tag = slug[0] === undefined ? "All notes" : slug[0];
+
+  return {
+    title: `Tag: ${tag}`,
+    description: `Add new ${tag} note!`,
+    openGraph: {
+      title: `Tag: ${tag}`,
+      description: `Add new ${tag} note!`,
+      url: `https://08-zustand-phi-vert.vercel.app/notes/filter/${tag}`,
+      images: [
+        {
+          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+          width: 1200,
+          height: 630,
+          alt: tag,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `Tag: ${tag}`,
+      description: `Add new ${tag} note!`,
+      images: ["https://ac.goit.global/fullstack/react/notehub-og-meta.jpg"],
+    },
+  };
+};
+
+interface Props {
+  params: Promise<{ slug: string[] }>;
+}
+
+const NotesByCategory = async ({ params }: Props) => {
+  const { slug } = await params;
+  const tag = slug[0] === "all" ? undefined : slug[0];
 
   const queryClient = new QueryClient();
-
-  await queryClient.prefetchQuery<NotesListResponse>({
-    queryKey: ["notes", { page, search, perPage, tag: tag ?? "all" }],
-    queryFn: ({ signal }) =>
-      fetchNotes(
-        {
-          page,
-          perPage,
-          search,
-          tag: tag !== "all" ? (tag as NoteTag) : undefined,
-        },
-        signal
-      ),
-    staleTime: 30_000,
+  await queryClient.prefetchQuery({
+    queryKey: ["notes", 1, "", tag],
+    queryFn: () => fetchServerNotes(1, 12, "", tag),
   });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <NotesClient
-        initialPage={page}
-        initialSearch={search}
-        perPage={perPage}
-        currentTag={tag}
-      />
+      <NotesClient tag={tag} />
     </HydrationBoundary>
   );
-}
+};
+export default NotesByCategory;
